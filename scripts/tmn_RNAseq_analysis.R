@@ -9,7 +9,7 @@ library(ggpubr)
 library(ape)
 library(ggrepel)
 
-setwd("/net/intdev/cbb01/garushyants/tmn_antitmn/20241210_RNAseq_data")
+setwd("/Volumes/garushyants/tmn_antitmn/20241210_RNAseq_data")
 
 # buildindex(basename="BL21_AI_tmn_index",reference="reference_genome_yi/tmn_reference_multiline.fa")
 
@@ -83,16 +83,16 @@ GFFAnnotationIn$product<- get_attribute_by_name("product")
 GFFAnnotationIn$gene<- get_attribute_by_name("gene")
 GFFAnnotationIn$ID<- get_attribute_by_name("ID")
 
-###look how close all the samples are
-
-x<-DGEList(counts=AllCounts[,c(2:5)],
-           genes=AllAnnotation[,c("GeneID","Length")])
-isexpr <- rowSums(cpm(x) > 10) >= 2 
-x <- x[isexpr,]
-
-y<-voom(x,plot=T)
-
-plotMDS(y)
+# ###look how close all the samples are
+# 
+# x<-DGEList(counts=AllCounts[,c(2:5)],
+#            genes=AllAnnotation[,c("GeneID","Length")])
+# isexpr <- rowSums(cpm(x) > 10) >= 2 
+# x <- x[isexpr,]
+# x<-calcNormFactors(x)
+# y<-voom(x,plot=T)
+# 
+# plotMDS(y)
 ################
 #Look at Tmn expression
 AllAnnotationTmn<-subset(AllAnnotation,
@@ -107,6 +107,7 @@ xTmn <- DGEList(counts=CountsTmn[,c(1,2)], genes=AllAnnotationTmn[,c("GeneID","L
 #FilterLowExpressed
 isexpr <- rowSums(cpm(xTmn) > 10) >= 2 
 xTmn <- xTmn[isexpr,]
+xTmn<-calcNormFactors(xTmn)
 RPKMTmn<-data.frame(rpkm(xTmn))
 
 RPKMTmn$foldchange<-log2(RPKMTmn$tmn_T2_all.bam/RPKMTmn$tmn_control_all.bam)
@@ -156,7 +157,7 @@ RPKMT2WithAnnotFull<-merge(RPKMT2WithAnnotInit,
                            by.y="ID")
 #########
 write.table(RPKMT2WithAnnotFull,
-            file="T2_RPKM_along_genome_20241216.tsv",
+            file="T2_RPKM_along_genome_20260217.tsv",
             sep="\t",
             quote=F,
             row.names = F)
@@ -218,11 +219,8 @@ CountsChr<-subset(AllCounts[,c(2:5)],
 
 xChr <- DGEList(counts=CountsChr, genes=AnnotationChr[,c("GeneID","Length")])
 
-# #Filter Out Low Expressed
-# isexpr <- rowSums(cpm(xChr) > 10) >= 2
-# xChr <- xChr[isexpr,]
-
 #I use here modified function because I am considering the sets of genes that I can compare for tmn+T2 vs YFP+T2
+xChr<-calcNormFactors(xChr)
 isexpr <- rowSums(cpm(xChr)[,c(1,3)] > 10) >= 2
 xChr <- xChr[isexpr,]
 #ConvertToRPKMs
@@ -251,7 +249,7 @@ RPKMChrWithAnnotFull$PredictionConfidence<-ifelse((RPKMChrWithAnnotFull$tmn_T2_a
                                                   "Low","High")
 ########################
 write.table(RPKMChrWithAnnotFull,
-            file="RPKM_along_genome_BL21_AI_in_presense_of_T2_20241230.tsv",
+            file="RPKM_along_genome_BL21_AI_in_presense_of_T2_20260217.tsv",
             sep="\t",
             quote=F,
             row.names = F)
