@@ -13,6 +13,7 @@ library(stringr)
 #library(cowplot)
 library(ggpubr)
 library(ggplotify)
+library(msa)
 
 ##############
 mainpath<-dirname(rstudioapi::getActiveDocumentContext()$path)
@@ -75,9 +76,10 @@ ClusterNodesAll<-LeavesRepresentativesInfo %>%
 ClusterNodesAll$ClusterID<-factor(ClusterNodesAll$ClusterID,
                                   levels = c("Ia","Ib","II","III","IV","V","VI","VII","VIII","IX"))
 
-clustercolors<-c("#8dd3c7","#ffffb3","#bebada","#fb8072",
-                 "#80b1d3","#fdb462","#b3de69","#fccde5",
-                 "#d9d9d9","#bc80bd")
+clustercolors<-c("#8dd3c7","#ffffb3","#bebada","#fccde5",
+                 "#d9d9d9","#b3de69","#fb8072",
+                 "#80b1d3","#fdb462",
+                 "#bc80bd")
 names(clustercolors)<-c("Ia","Ib","II","III","IV","V","VI","VII","VIII","IX")
 #I also want to add experimental strains to this plot
 PreExpStrains<-subset(LeavesInfo, !is.na(LeavesInfo$Tmn_variant))
@@ -183,32 +185,32 @@ GetVariablePositionsAli<-function(aln)
   return(variable_positions)
 }
 #############
-##Case 1 Cluster 5
-Clade5group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_014596695.2")
-Clade5ToKeep<-Clade5group$Proteinid
-Clade5_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade5ToKeep]
+##Case 1 Cluster 8
+Clade8group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_014596695.2")
+Clade8ToKeep<-Clade8group$Proteinid
+Clade8_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade8ToKeep]
 #realign pair
-Clade5_realn <- msa(Clade5_aln_sub, method = "Muscle")
-
+Clade8_realn <- msa(Clade8_aln_sub, method = "Muscle")
+alilength<-ncol(Clade8_realn)
 #####get basic stat
-Clade5_AllChanges<-GetVariablePositionsAli(Clade5_realn)
-Clade5ShArm<-seq(417,571)
-Clade5LongArm<-seq(612,unique(width(as(Clade5_realn, "AAStringSet"))))
+Clade8_AllChanges<-GetVariablePositionsAli(Clade8_realn)
+Clade8ShArm<-seq(417,571)
+Clade8LongArm<-seq(612,unique(width(as(Clade8_realn, "AAStringSet"))))
 #calculate portion of substitutions per element
-Clade5ChngOutsideArms<-length(Clade5_AllChanges[!(Clade5_AllChanges %in% c(Clade5ShArm,Clade5LongArm))])/(alilength - length(c(Clade5ShArm,Clade5LongArm)))
-paste("Changes outside arms:",Clade5ChngOutsideArms)
-Clade5ChngShArm<-length(Clade5_AllChanges[Clade5_AllChanges%in% Clade5ShArm])/length(Clade5ShArm)
-paste("Changes in short arm:",Clade5ChngShArm)
-Clade5ChngLongArm<-length(Clade5_AllChanges[Clade5_AllChanges%in% Clade5LongArm])/length(Clade5LongArm)
-paste("Changes in long arm:",Clade5ChngLongArm)
+Clade8ChngOutsideArms<-length(Clade8_AllChanges[!(Clade8_AllChanges %in% c(Clade8ShArm,Clade8LongArm))])/(alilength - length(c(Clade8ShArm,Clade8LongArm)))
+paste("Changes outside arms:",Clade8ChngOutsideArms)
+Clade8ChngShArm<-length(Clade8_AllChanges[Clade8_AllChanges%in% Clade8ShArm])/length(Clade8ShArm)
+paste("Changes in short arm:",Clade8ChngShArm)
+Clade8ChngLongArm<-length(Clade8_AllChanges[Clade8_AllChanges%in% Clade8LongArm])/length(Clade8LongArm)
+paste("Changes in long arm:",Clade8ChngLongArm)
 #print list of residues for ChimeraX
-toString(Clade5_AllChanges)
+toString(Clade8_AllChanges)
 
 ##
 
-Clade5AliPlot<-getAliPlot(Clade5_realn,"../data/Tmn_multiple/Clade5_tmn.fasta",zoomcoeff =15)
-ggsave(plot = Clade5AliPlot,
-       filename = "Clade5_copies_alignment.pdf",
+Clade8AliPlot<-getAliPlot(Clade8_realn,"../data/Tmn_multiple/Clade8_tmn.fasta",zoomcoeff =15)
+ggsave(plot = Clade8AliPlot,
+       filename = "Clade8_copies_alignment.pdf",
        path="../figures/Tmn_multiple/",
        height = 40,
        width = 36,
@@ -217,45 +219,47 @@ ggsave(plot = Clade5AliPlot,
        
 
 #Case 2 Clade 4 neighboring leaves
-Clade4group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_019931755.1")
-Clade4ToKeep<-Clade4group$Proteinid
-Clade4_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade4ToKeep]
-Clade4_realn <- msa(Clade4_aln_sub, method = "Muscle")
+Clade7group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_019931755.1")
+Clade7ToKeep<-Clade7group$Proteinid
+Clade7_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade7ToKeep]
+Clade7_realn <- msa(Clade7_aln_sub, method = "Muscle")
 #####get basic stat
-Clade4_AllChanges<-GetVariablePositionsAli(Clade4_realn)
-Clade4ShArm<-seq(424,599)
-Clade4LongArm<-seq(634,unique(width(as(Clade4_realn, "AAStringSet"))))
+Clade7_AllChanges<-GetVariablePositionsAli(Clade7_realn)
+Clade7ShArm<-seq(424,599)
+Clade7LongArm<-seq(634,unique(width(as(Clade7_realn, "AAStringSet"))))
+###
+clade7alilength<-ncol(Clade7_realn)
 #calculate portion of substitutions per element
-Clade4ChngOutsideArms<-length(Clade4_AllChanges[!(Clade4_AllChanges %in% c(Clade4ShArm,Clade4LongArm))])/(alilength - length(c(Clade4ShArm,Clade4LongArm)))
-paste("Changes outside arms:",Clade4ChngOutsideArms)
-Clade4ChngShArm<-length(Clade4_AllChanges[Clade4_AllChanges%in% Clade4ShArm])/length(Clade4ShArm)
-paste("Changes in short arm:",Clade4ChngShArm)
-Clade4ChngLongArm<-length(Clade4_AllChanges[Clade4_AllChanges%in% Clade4LongArm])/length(Clade4LongArm)
-paste("Changes in long arm:",Clade4ChngLongArm)
+Clade7ChngOutsideArms<-length(Clade7_AllChanges[!(Clade7_AllChanges %in% c(Clade7ShArm,Clade7LongArm))])/(clade7alilength - length(c(Clade7ShArm,Clade7LongArm)))
+paste("Changes outside arms:",Clade7ChngOutsideArms)
+Clade7ChngShArm<-length(Clade7_AllChanges[Clade7_AllChanges%in% Clade7ShArm])/length(Clade7ShArm)
+paste("Changes in short arm:",Clade7ChngShArm)
+Clade7ChngLongArm<-length(Clade7_AllChanges[Clade7_AllChanges%in% Clade7LongArm])/length(Clade7LongArm)
+paste("Changes in long arm:",Clade7ChngLongArm)
 #print list of residues for ChimeraX
-Clade4_AllChangesAdj<-ifelse(Clade4_AllChanges<1024, Clade4_AllChanges,
-                             Clade4_AllChanges -2)
-toString(Clade4_AllChangesAdj)
+Clade7_AllChangesAdj<-ifelse(Clade7_AllChanges<1024, Clade7_AllChanges,
+                             Clade7_AllChanges -2)
+toString(Clade7_AllChangesAdj)
 
 ##plot alignment and save
-Clade4AliPlot<-getAliPlot(Clade4_realn,"../data/Tmn_multiple/Clade4_tmn.fasta", zoomcoeff = 3.5)
-ggsave(plot = Clade4AliPlot,
-       filename = "Clade4_copies_alignment.pdf",
+Clade7AliPlot<-getAliPlot(Clade7_realn,"../data/Tmn_multiple/Clade7_tmn.fasta", zoomcoeff = 3.5)
+ggsave(plot = Clade7AliPlot,
+       filename = "Clade7_copies_alignment.pdf",
        path="../figures/Tmn_multiple/",
        height = 40,
        width = 36,
        dpi = 300,
        units = "cm")
-# #Case 3 Clade 4 more distant leaves
-# Clade42group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_014645115.1")
-# Clade42ToKeep<-Clade42group$Proteinid
-# Clade42_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade42ToKeep]
-# Clade42_realn <- msa(Clade42_aln_sub, method = "Muscle")
+# ##Case 3 Clade 4 more distant leaves
+# Clade72group<-subset(MultipleCopiesDf, MultipleCopiesDf$RefSeqGenomeID == "GCF_014645115.1")
+# Clade72ToKeep<-Clade72group$Proteinid
+# Clade72_aln_sub <- TmnRepAlignment[names(TmnRepAlignment) %in% Clade72ToKeep]
+# Clade72_realn <- msa(Clade72_aln_sub, method = "Muscle")
 # 
-# Clade42AliPlot<-getAliPlot(Clade42_realn,"../data/Tmn_multiple/Clade4_tmn_GCF_014645115.1.fasta", zoomcoeff = 3.6)
+# Clade72AliPlot<-getAliPlot(Clade72_realn,"../data/Tmn_multiple/Clade7_tmn_GCF_014645115.1.fasta", zoomcoeff = 3.6)
 # 
-# ggsave(plot = Clade42AliPlot,
-#        filename = "Clade4_GCF_014645115.1_copies_alignment.pdf",
+# ggsave(plot = Clade72AliPlot,
+#        filename = "Clade7_GCF_014645115.1_copies_alignment.pdf",
 #        path="../figures/Tmn_multiple/",
 #        height = 40,
 #        width = 36,
