@@ -20,10 +20,10 @@ library(colorspace)
 #this parameter defines the length of the neighborhood to study
 neighLength<-15000
 ###
-mainpath<-"/Volumes/garushyants/tmn_antitmn/20260128_tmn_padloc_rebuild_tree-relaxed/"
+mainpath<-"./"
 setwd(mainpath)
 ###Set figures folder###
-Figures<-"./genomic_neighborhoods"
+Figures<-"./genomic_contexts"
 if (!dir.exists(Figures)) {
   dir.create(Figures)
   cat("Folder created.\n")
@@ -286,9 +286,10 @@ GFFwPADaGenNoDupl<-subset(GFFwPADaGen, GFFwPADaGen$duplic)
 DataForPlotClean<-GFFwPADaGenNoDupl[,c(5,1,2,7,48:51,53)]
 ######################################################################################
 Clades<-unique(na.omit(LeavesRepresentativesInfo$ClusterID))
-cladecolors<-c("#8dd3c7","#ffffb3","#bebada","#fb8072",
-                "#80b1d3","#fdb462","#b3de69","#fccde5",
-                "#d9d9d9","#bc80bd")
+cladecolors<-c("#8dd3c7","#ffffb3","#bebada","#fccde5",
+               "#d9d9d9","#b3de69","#fb8072",
+               "#80b1d3","#fdb462",
+               "#bc80bd")
 names(cladecolors)<-c("Ia","Ib","II","III","IV","V","VI","VII","VIII","IX")
 drawNeigborhoodPlot<-function(Clade)
 {

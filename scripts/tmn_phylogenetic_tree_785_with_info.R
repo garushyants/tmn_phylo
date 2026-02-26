@@ -7,15 +7,18 @@ library(phytools)
 library(stringr)
 library(tidyr)
 library(dplyr)
-#library(purrr)
 library(ggnewscale)
 library(scales)
 library(readxl)
 library(openxlsx)
+library(this.path)
 
-mainpath<-"/Volumes/garushyants/tmn_antitmn/20260128_tmn_padloc_rebuild_tree-relaxed/"
+###################
+mainpath<-paste0(dirname(this.path()),"/../")
 setwd(mainpath)
-FigDir<-"tree_figures"
+# mainpath<-"/Volumes/garushyants/tmn_antitmn/20260128_tmn_padloc_rebuild_tree-relaxed/"
+# setwd(mainpath)
+FigDir<-"./figures/tree_figures"
 
 if (!dir.exists(FigDir)){
   dir.create(FigDir)
@@ -24,7 +27,7 @@ if (!dir.exists(FigDir)){
 }
 #Read tree
 #I use this method from treio to uncover bootstraps
-tree<-read.iqtree("./Tmn_withActiveWalker.IQTree.treefile")
+tree<-read.iqtree("./data/Tmn_withActiveWalker.IQTree.treefile")
 
 
 ###getting bootsrap info
@@ -42,7 +45,7 @@ TreeMidRoot<-midpoint.root(tree@phylo)
 #Read Info about genomes and PADLOC predictions
 ct <- rep("guess", 25)
 ct[24] <- "text"
-LeavesInfo<-read_xlsx("SupplementaryTable1.xlsx", col_types = ct)
+LeavesInfo<-read_xlsx("./data/SupplementaryTable1.xlsx", col_types = ct)
 
 ########
 #Manipulate basic data
@@ -168,11 +171,11 @@ TmnClusterAssignments <- ClusterAncestryNodeOfInterest %>%
 TableToSaveWithClusters<-merge(LeavesInfo[,c(1:25)],TmnClusterAssignments[,c(1,3)], all.x =T,
                                by= "TreeRepresentative")
 # #Save the complete table 1 with clusters
-# write.xlsx(TableToSaveWithClusters,
-#            file="SupplementaryTable1_all_info.xlsx",
-#            rowNames = F)
+write.xlsx(TableToSaveWithClusters,
+           file="./data/SupplementaryTable1_all_info.xlsx",
+           rowNames = F)
 # write.table(TableToSaveWithClusters,
-#            file="SupplementaryTable1_all_info.tsv",
+#            file="./data/SupplementaryTable1_all_info.tsv",
 #            sep="\t",
 #            row.names = F,
 #            quote = F)
@@ -182,7 +185,7 @@ TableToSaveWithClusters<-merge(LeavesInfo[,c(1:25)],TmnClusterAssignments[,c(1,3
 #Adding data on MGE from genomad
 LeavesForMGE<-subset(TableToSaveWithClusters, TableToSaveWithClusters$RepresentativeGenome == "Y")
 ##Plasmids
-pathtogenomadfolder<-"./genomad_output/"
+pathtogenomadfolder<-"./data/genomad_output/"
 filelistgenomadplasmid = list.files(pattern="\\plasmid_summary.tsv$",
                                     recursive = T,
                                     path = pathtogenomadfolder)
