@@ -7,6 +7,7 @@ library(phytools)
 library(stringr)
 library(tidyr)
 library(dplyr)
+#library(purrr)
 library(ggnewscale)
 library(scales)
 library(readxl)
@@ -46,7 +47,7 @@ LeavesInfo<-read_xlsx("SupplementaryTable1.xlsx", col_types = ct)
 ########
 #Manipulate basic data
 CommonGenusInSet<-LeavesInfo %>% group_by(`Genus name`) %>%
-  count()
+  summarise(n=n())
 CommonGenusInSet<-CommonGenusInSet[order(-CommonGenusInSet$n),]
 
 sum(pull(CommonGenusInSet[c(1:12),2]))/length(LeavesInfo$Proteinid)
@@ -57,10 +58,10 @@ LeavesInfo$TopGenus<-ifelse(LeavesInfo$`Genus name` %in% GenusToKeep,
 
 HitsCountsPerLeaf<-LeavesInfo %>%
   group_by(TreeRepresentative)%>%
-  count()
+  dplyr::count()
 TaxonomyCountsPerLeaf<-LeavesInfo %>%
   group_by(TreeRepresentative, TopGenus) %>% 
-  count(TopGenus) %>%
+  dplyr::count(TopGenus) %>%
   group_by(TreeRepresentative) %>%
   mutate(percent = n / sum(n) * 100)
 TaxonomyCountsPerLeaf$TopGenus<-factor(TaxonomyCountsPerLeaf$TopGenus,
@@ -68,13 +69,13 @@ TaxonomyCountsPerLeaf$TopGenus<-factor(TaxonomyCountsPerLeaf$TopGenus,
 
 DomainCountsPerLeaf<-LeavesInfo %>%
   group_by(TreeRepresentative, `Domain/Realm name`) %>% 
-  count(`Domain/Realm name`) %>%
+  dplyr::count(`Domain/Realm name`) %>%
   group_by(TreeRepresentative) %>%
   mutate(percent = n / sum(n) * 100)
 #Class level
 #Select most common class
 CommonClassInSet<-LeavesInfo %>% group_by(`Class name`) %>%
-  count()%>%
+  dplyr::count()%>%
   arrange(desc(n))
 ClassDf<-LeavesInfo[,c(23,19)]
 ClassDf$CommonClass<-ifelse(ClassDf$`Class name` %in% CommonClassInSet$`Class name`[1:11],
@@ -83,7 +84,7 @@ ClassDf$CommonClass<-ifelse(ClassDf$`Class name` %in% CommonClassInSet$`Class na
 #I pick all Classes with > 15 genomes
 ClassCountsPerLeaf<-ClassDf %>%
   group_by(TreeRepresentative, CommonClass) %>% 
-  count(CommonClass) %>%
+  dplyr::count(CommonClass) %>%
   group_by(TreeRepresentative) %>%
   mutate(percent = n / sum(n) * 100)
 unique(ClassCountsPerLeaf$CommonClass)
@@ -134,7 +135,7 @@ BasicTreePlotWithLabels
 #   geom_treescale(y=1, x=4.5, fontsize=3, linesize=0.7, offset=1.2)
 #######################################################################################
 ###Add clusters
-ClusterAncestryNodeOfInterest<-data.frame(ClusterID = c("Ia","Ib","II","III","IV","V","VI","VII","VIII","IX"),
+ClusterAncestryNodeOfInterest<-data.frame(ClusterID = c("Ia","Ib","II","VI","VII","VIII","V","III","IV","IX"),
                                           ClMRCA = c(1250,1312,1384,895,799,1053,794,1212,1396,1196))
 ClusterAncestryNodeOfInterest$ClusterID<-factor(ClusterAncestryNodeOfInterest$ClusterID,
                                                 levels = c("Ia","Ib","II","III","IV","V","VI","VII","VIII","IX"))
@@ -146,9 +147,10 @@ BasicTreePlotWithClusters <-BasicTreePlotWithLabels + geom_hilight(data = Cluste
                                                                    alpha=.3,
                                                                    align="right",
                                                                    to.bottom=T)+
-  scale_fill_manual(values = c("#8dd3c7","#ffffb3","#bebada","#fb8072",
-                               "#80b1d3","#fdb462","#b3de69","#fccde5",
-                               "#d9d9d9","#bc80bd"))+
+  scale_fill_manual(values = c("#8dd3c7","#ffffb3","#bebada","#fccde5",
+                               "#d9d9d9","#b3de69","#fb8072",
+                               "#80b1d3","#fdb462",
+                               "#bc80bd"))+
   guides(fill = guide_legend(nrow = 4))
 BasicTreePlotWithClusters
 
@@ -377,14 +379,20 @@ ggsave("tmn_785_tree_with_MGE_and_Tax_v3.svg",
 #############################################################
 ##Get protein lengths per cluster
 
-clustercolors<-c("#8dd3c7","#ffffb3","#bebada","#fb8072",
-                 "#80b1d3","#fdb462","#b3de69","#fccde5",
-                 "#d9d9d9","#bc80bd")
+clustercolors<-c("#8dd3c7","#ffffb3","#bebada","#fccde5",
+                 "#d9d9d9","#b3de69","#fb8072",
+                 "#80b1d3","#fdb462",
+                 "#bc80bd")
 
 ProteinLengthsDf<-subset(TableToSaveWithClusters, TableToSaveWithClusters$RepresentativeGenome == "Y" &
                            !is.na(TableToSaveWithClusters$ClusterID))
 
 ProteinLengthsDf$length<-(ProteinLengthsDf$End - ProteinLengthsDf$Start+1)/3
+
+####
+#Testing the significance for length difference
+pairwise.wilcox.test(ProteinLengthsDf$length, ProteinLengthsDf$ClusterID, p.adjust.method = "BH")
+####
 
 min(ProteinLengthsDf$length)
 max(ProteinLengthsDf$length)
