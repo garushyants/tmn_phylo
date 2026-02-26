@@ -15,15 +15,19 @@ library(scales)
 library(readxl)
 library(RColorBrewer)
 library(colorspace)
+library(this.path)
 
+###################
+mainpath<-paste0(dirname(this.path()),"/../")
+setwd(mainpath)
 
 #this parameter defines the length of the neighborhood to study
 neighLength<-15000
-###
-mainpath<-"./"
-setwd(mainpath)
+# ###
+# mainpath<-"/Volumes/garushyants/tmn_antitmn/20260128_tmn_padloc_rebuild_tree-relaxed/"
+# setwd(mainpath)
 ###Set figures folder###
-Figures<-"./genomic_contexts"
+Figures<-"./figures/genomic_contexts"
 if (!dir.exists(Figures)) {
   dir.create(Figures)
   cat("Folder created.\n")
@@ -33,7 +37,7 @@ if (!dir.exists(Figures)) {
 ###
 ######################
 #########Load and draw phylogenetic tree
-tree<-read.iqtree("./Tmn_withActiveWalker.IQTree.treefile")
+tree<-read.iqtree("./data/Tmn_withActiveWalker.IQTree.treefile")
 
 
 ###getting bootsrap info
@@ -50,7 +54,7 @@ TreeMidRoot<-midpoint.root(tree@phylo)
 #Read info about leaves required for tree construction
 ct <- rep("guess", 26)
 ct[24] <- "text"
-LeavesInfo<-read_xlsx("SupplementaryTable1_all_info.xlsx", col_types = ct)
+LeavesInfo<-read_xlsx("./data/SupplementaryTable1_all_info.xlsx", col_types = ct)
 ######
 LeavesRepresentativesInfo<-subset(LeavesInfo,
                                   LeavesInfo$RepresentativeGenome == "Y")
@@ -60,7 +64,7 @@ LeavesRepresentativesInfo$LeftBorder<-ifelse((LeavesRepresentativesInfo$Start - 
                                              LeavesRepresentativesInfo$Start - neighLength)
 LeavesRepresentativesInfo$RightBorder<-LeavesRepresentativesInfo$End + neighLength
 ##Also get info about prophages and plasmids
-MGEinfo<-read.csv("Tmn_785_MGE_data_genomad.summary.tsv",
+MGEinfo<-read.csv("./data/Tmn_785_MGE_data_genomad.summary.tsv",
                   header=T, sep="\t")
 colnames(MGEinfo)[2:3]<-c("Plasmid","Prophage")
 ####################################################################################
@@ -68,7 +72,7 @@ colnames(MGEinfo)[2:3]<-c("Plasmid","Prophage")
 ###Now let's dig into genomic annotation
 
 #############Part 1.Loading GFFs####################################################
-GFFPath<-"./representative_genomes/gff"
+GFFPath<-"./data/gff"
 GFFFiles<-list.files(pattern="\\_genomic.gff.gz$",
                      path = GFFPath)
 setwd(paste(mainpath,GFFPath,sep="/"))
@@ -119,7 +123,7 @@ GFFofInterest<-GFFdataCDSwTmn %>%
 #             sep="\t",quote = F, row.names = F, col.names = F)
 #############Loading PFAM data######################
 ##Reading PFAM hmmscan output
-PFAMpath<-"./PFAM_search_20260201/"
+PFAMpath<-"./data/pfam_annotation/"
 PFAMselectedFiles<-list.files(pattern="\\.csv$",
                               recursive = T,
                               path = PFAMpath)
@@ -143,14 +147,14 @@ GFFwPFAMofInterest<-merge(GFFofInterest,
                           all.x=T)
 #############Part 2.Loading annotation from Genomad###################################
 #I do this annotation on the same selected proteoomes as PFAM search
-GenomadAnnotation<-read.csv("./genomic_neighborhoods/annotate_genomaddb/GenomadAnnotateResults_20260201.tsv",
+GenomadAnnotation<-read.csv("./data/genomic_neighborhoods/annotate_genomaddb/GenomadAnnotateResults_20260201.tsv",
                             sep="\t", header=F)
 #Filter results
 GenomadAnnotationFiltered<-subset(GenomadAnnotation,
                                   GenomadAnnotation$V3 < 0.001 & #E-value filter as in default genomad
                                   GenomadAnnotation$V6 > 0.75) #V6 is target coverage
 ##
-GenomadAnnotationMeta<-read.csv("./genomic_neighborhoods/annotate_genomaddb/genomad_metadata_v1.9.tsv", 
+GenomadAnnotationMeta<-read.csv("./data/genomic_neighborhoods/annotate_genomaddb/genomad_metadata_v1.9.tsv", 
                                 sep="\t")
 GenomadAnnotationFull<-merge(GenomadAnnotationFiltered, 
                              GenomadAnnotationMeta,
@@ -178,7 +182,7 @@ GFFwPGofInterest<-merge(GFFwPFAMofInterest,
                           by.y = c("V1"),
                           all.x=T)
 #############Part 3.Loading PADLOC data###############################################
-PADLOCdatapath<-"../20231218_padlocdb_2.0/defence_systems_tables/"
+PADLOCdatapath<-"./data/defence_systems_tables/"
 PADLOCfiles<-paste0(sort(unique(LeavesRepresentativesInfo$RefSeqGenomeID)),".csv")
 
 setwd(paste0(mainpath,"/",PADLOCdatapath))
@@ -278,7 +282,7 @@ GFFwPADaGenNoDupl<-subset(GFFwPADaGen, GFFwPADaGen$duplic)
 # ##Supplementary Table 2
 # SupTable2<-GFFwPADaGenNoDupl[,c(5,7,1,2,27,10,3,4,12,30,34,45:48,53)]#60:62,67,51,52)]
 # names(SupTable2)[c(4,9:10)]<-c("Contig","DefenseSystem","Feature_type")
-# write.table(SupTable2, paste0(Figures,"/Supplementary_table_2_genomic_contexts_20k.tsv"),
+# write.table(SupTable2, "./data/Supplementary_table_2_genomic_contexts_20k.tsv",
 #             sep="\t",
 #             row.names = F,
 #             quote = F)
