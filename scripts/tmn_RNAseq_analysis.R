@@ -8,8 +8,18 @@ library(dplyr)
 library(ggpubr)
 library(ape)
 library(ggrepel)
+library(rstudioapi)
 
-setwd("/Volumes/garushyants/tmn_antitmn/20241210_RNAseq_data")
+#######
+library(Gviz)
+library(GenomicAlignments)
+library(Rsamtools)
+library(GenomicFeatures)
+library(rtracklayer)
+#######
+
+mainpath<-dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(paste0(mainpath,"/../data/rnaseq_data/"))
 
 # buildindex(basename="BL21_AI_tmn_index",reference="reference_genome_yi/tmn_reference_multiline.fa")
 
@@ -157,7 +167,7 @@ RPKMT2WithAnnotFull<-merge(RPKMT2WithAnnotInit,
                            by.y="ID")
 #########
 write.table(RPKMT2WithAnnotFull,
-            file="T2_RPKM_along_genome_20260217.tsv",
+            file="../T2_RPKM_along_genome.tsv",
             sep="\t",
             quote=F,
             row.names = F)
@@ -192,14 +202,7 @@ T2RPKMAlongGenomePlot<-ggplot(data=ForPlot,
         axis.title = element_text(size=14))
 T2RPKMAlongGenomePlot
 
-ggsave("T2_RPKM_along_genome_20241216.png",
-       plot=T2RPKMAlongGenomePlot,
-       width =40,
-       height =15,
-       dpi=300,
-       units = "cm")
-
-ggsave("T2_RPKM_along_genome_20241216.pdf",
+ggsave("../../figures/rnaseq/T2_RPKM_along_genome.pdf",
        plot=T2RPKMAlongGenomePlot,
        width =40,
        height =15,
@@ -249,7 +252,7 @@ RPKMChrWithAnnotFull$PredictionConfidence<-ifelse((RPKMChrWithAnnotFull$tmn_T2_a
                                                   "Low","High")
 ########################
 write.table(RPKMChrWithAnnotFull,
-            file="RPKM_along_genome_BL21_AI_in_presense_of_T2_20260217.tsv",
+            file="../RPKM_along_genome_BL21_AI_in_presense_of_T2.tsv",
             sep="\t",
             quote=F,
             row.names = F)
@@ -282,16 +285,77 @@ ChrRPKMAlongGenomePlot<-ggplot(data=RPKMChrForPlot,
         axis.title = element_text(size=14))
 ChrRPKMAlongGenomePlot
 
-ggsave("RPKM_along_genome_BL21_AI_in_presense_of_T2_20241230.png",
-       plot=ChrRPKMAlongGenomePlot,
-       width =40,
-       height =15,
-       dpi=300,
-       units = "cm")
-ggsave("RPKM_along_genome_BL21_AI_in_presense_of_T2_20241230.pdf",
+ggsave("../../figures/rnaseq/RPKM_along_genome_BL21_AI_in_presense_of_T2.pdf",
        plot=ChrRPKMAlongGenomePlot,
        width =40,
        height =15,
        dpi=300,
        units = "cm")
 
+#########################################################################
+#########################################################################
+##Vizualize Tmn expression in different conditions
+
+options(ucscChromosomeNames = FALSE)
+
+Genogff<- import("20241216_T2_genbank/tmn_reference_20241216.gff")
+#cds_gr <- Genogff[Genogff$type == "CDS"]
+defense_colors <- c("steelblue",rep("#bdbdbd",3))
+
+idx <- mcols(Genogff)$locus_tag ==
+  "Ec_04575"
+mcols(Genogff)$product[idx] <- "Tmn"
+
+geneTrack <- GeneRegionTrack(
+  Genogff,
+  genome = "E.coli BL21 AI",
+  name = "CDS",
+  symbol = mcols(Genogff)$product,
+  shape = "arrow"
+)
+displayPars(geneTrack)$fill <- defense_colors
+##
+#filtering partially mapped
+TmnT2_bam <- readGAlignments(paste0(condition[3],"_all_sorted.bam"))
+T2keep <- !grepl("S", cigar(TmnT2_bam))
+TmnT2_bam_filt <- TmnT2_bam[T2keep]
+export(TmnT2_bam_filt, paste0(condition[3],"_filtered.bam"))
+
+TmnC_bam <- readGAlignments(paste0(condition[4],"_all_sorted.bam"))
+TmnCkeep <- !grepl("S", cigar(TmnC_bam))
+TmnC_bam_filt <- TmnC_bam[TmnCkeep]
+export(TmnC_bam_filt, paste0(condition[4],"_filtered.bam"))
+
+param <- ScanBamParam(
+  flag = scanBamFlag(
+    isProperPair = TRUE,
+    isUnmappedQuery = FALSE,
+    hasUnmappedMate = FALSE,
+    isSecondaryAlignment = FALSE,
+    isSupplementaryAlignment = FALSE
+  )
+)
+###
+covTrack1 <- DataTrack(
+  range = paste0(condition[3],"_filtered.bam"),
+  type = "histogram",
+  genome = "E.coli BL21 AI",
+  name = "T2",
+  scanBamParam = param
+)
+covTrack2 <- DataTrack(
+  range = paste0(condition[4],"_filtered.bam"),
+  type = "histogram",
+  genome = "E.coli BL21 AI",
+  name = "control",
+  scanBamParam = param
+)
+
+axisTrack <- GenomeAxisTrack()
+
+plotTracks(
+  list(axisTrack, geneTrack,covTrack1,
+       covTrack2),
+  chromosome = "pACYC_pBAD_tmnECOR25_nativePromoter", #"pACYC_pBAD_YFP",#
+  transcriptAnnotation = "symbol"
+)
