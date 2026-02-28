@@ -353,9 +353,15 @@ covTrack2 <- DataTrack(
 
 axisTrack <- GenomeAxisTrack()
 
+pdf("../../figures/rnaseq/Tmn_expression_raw_reads.pdf", width=16, height=10)  # adjust width/height
+
 plotTracks(
   list(axisTrack, geneTrack,covTrack1,
        covTrack2),
-  chromosome = "pACYC_pBAD_tmnECOR25_nativePromoter", #"pACYC_pBAD_YFP",#
+  chromosome = "pACYC_pBAD_tmnECOR25_nativePromoter", 
+  from = 1,
+  to = 4100,
   transcriptAnnotation = "symbol"
 )
+
+dev.off()

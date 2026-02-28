@@ -282,7 +282,7 @@ GFFwPADaGenNoDupl<-subset(GFFwPADaGen, GFFwPADaGen$duplic)
 # ##Supplementary Table 2
 # SupTable2<-GFFwPADaGenNoDupl[,c(5,7,1,2,27,10,3,4,12,30,34,45:48,53)]#60:62,67,51,52)]
 # names(SupTable2)[c(4,9:10)]<-c("Contig","DefenseSystem","Feature_type")
-# write.table(SupTable2, "./data/Supplementary_table_2_genomic_contexts_20k.tsv",
+# write.table(SupTable2, "./data/Supplementary_table_2_genomic_contexts_15k.tsv",
 #             sep="\t",
 #             row.names = F,
 #             quote = F)
